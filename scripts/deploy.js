@@ -9,9 +9,19 @@ const main = async () => {
     const simpleStorage = await SimpleStorageFactory.deploy();
     await simpleStorage.deployed();
     console.log(`Deployed contract to ${simpleStorage.address}`);
-    if (network.config.chainId === 5 && process.env.ETHERSCAN_API_KEY) verify();
-    
-    
+    if (network.config.chainId === 5 && process.env.ETHERSCAN_API_KEY) {
+      await simpleStorage.deployTransaction.wait(6);
+      await verify(simpleStorage.address, []);
+    }
+    console.log("Step4");
+
+    const currentValue = await simpleStorage.retrieve();
+    console.log("Current Value is: ", currentValue);
+
+    const transactionResponse = await simpleStorage.store(7);
+    await transactionResponse.wait(1);
+    const updatedValue = await simpleStorage.retrieve();
+    console.log("Updated Value is:", updatedValue);
   } catch (e) {
     console.log(e);
   }
@@ -25,7 +35,7 @@ const verify = async (contractAddress, args) => {
       contructorArguments: args,
     });
   } catch (e) {
-    if (e.messaage.toLowerCase().includes("already verifiea"))
+    if (e.messaage.toLowerCase().includes("already verified"))
       console.log("Already Verified");
     else console.log(e);
   }
